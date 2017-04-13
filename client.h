@@ -6,6 +6,8 @@
 #include <QTcpSocket>
 #include "attribute.h"
 
+#define INTERVAL 120
+
 namespace Ui {
 class Client;
 }
@@ -33,6 +35,8 @@ private slots:
     void readMessage();             //接受消息
 
     void autoTmpChange();           //房间温度自动变化
+
+    void displayError(QAbstractSocket::SocketError socketError);
 
 private:
     Ui::Client *ui;                 //ui

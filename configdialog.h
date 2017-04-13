@@ -15,15 +15,17 @@ class ConfigDialog : public QDialog
 public:
     explicit ConfigDialog(QWidget *parent = 0);
     ~ConfigDialog();
-    QString getRoomNum();//得到房间号
+    int getRoomNum();//得到房间号
     QString getIP();//得到主机IP
     QString getPort();//得到主机端口
+    double  getDefRoomTmp();//得到从机缺省室温
 public slots:
     virtual void accept();
 private:
     QLineEdit* roomNumEdit;//房间号
     QLineEdit* IPEdit;//主机IP
     QLineEdit* portEdit;//主机端口
+    QLineEdit* defRoomTmpEdit;//缺省室温
 };
 
 #endif // CONFIGDIALOG_H
