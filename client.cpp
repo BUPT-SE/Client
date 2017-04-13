@@ -4,34 +4,39 @@
 #include <QDebug>
 #include <QJsonDocument>
 #include <QByteArray>
+#include <QMessageBox>
 
 Client::Client(QWidget *parent) : QWidget(parent), ui(new Ui::Client)
 {
-    //成员初始化
-    ui->setupUi(this);
-    _attribute = new Attribute();
-    _tmpTimer = new QTimer(this);
-    _updown = 0;
-    _socket = new QTcpSocket(this);
-
-    //关联信号和槽函数
-    connect(_socket, SIGNAL(readyRead()), this, SLOT(readMessage()));
-    connect(_tmpTimer, SIGNAL(timeout()), this, SLOT(autoTmpChange()));
-
-    //主面板先不可用
-    ui->controlBox->setDisabled(true);
-
     //构建一个配置窗口，用于配置房间号，主机IP和端口
     ConfigDialog c;
     if(c.exec() == QDialog::Accepted)
     {
-        qDebug() << "Accepted!";
-        _attribute->setRoomNum(c.getRoomNum());
-        _hostIP = c.getIP();
-        _hostPort = c.getPort();
+        //成员初始化
+        ui->setupUi(this);
+        _attribute = new Attribute();
+        _tmpTimer = new QTimer(this);
+        _updown = 0;
+        _socket = new QTcpSocket(this);
+
+        //关联信号和槽函数
+        connect(_socket, SIGNAL(readyRead()), this, SLOT(readMessage()));
+        typedef void (QAbstractSocket::*QAbstractSocketErrorSignal)(QAbstractSocket::SocketError);
+        connect(_socket, static_cast<QAbstractSocketErrorSignal>(&QAbstractSocket::error),
+                      this, &Client::displayError);
+        connect(_tmpTimer, SIGNAL(timeout()), this, SLOT(autoTmpChange()));
+
+        //主面板先不可用
+        ui->controlBox->setDisabled(true);
+
+        _attribute->setRoomNum(c.getRoomNum());         //配置房间号
+        _hostIP = c.getIP();                            //配置主机IP地址
+        _hostPort = c.getPort();                        //配置主机端口
+        _attribute->setDefRoomTmp(c.getDefRoomTmp());   //配置缺省室温
+        _attribute->setRoomTmp(c.getDefRoomTmp());      //配置室温等于缺省室温
+        ui->roomNumLabel->setText(QString::fromLocal8Bit("房间号:") + QString::number(c.getRoomNum()));
+        ui->roomTmpLcd->display(QString::number((int)c.getDefRoomTmp()));
     }
-    else
-        qDebug() << "Error!";
 }
 
 Client::~Client()
@@ -47,7 +52,7 @@ void Client::on_upButton_clicked()
     {
         //温度+1，更新UI，发送消息
         _attribute->incTargetTmp();
-        ui->targetTmpLcd->display(QString::number(_attribute->getTargetTmp()));
+        ui->targetTmpLcd->display(QString::number((int)_attribute->getTargetTmp()));
         sendMessage();
     }
 }
@@ -60,7 +65,7 @@ void Client::on_downButton_clicked()
     {
         //温度-1，更新UI，发送消息
         _attribute->decTargetTmp();
-        ui->targetTmpLcd->display(QString::number(_attribute->getTargetTmp()));
+        ui->targetTmpLcd->display(QString::number((int)_attribute->getTargetTmp()));
         sendMessage();
     }
 }
@@ -99,9 +104,14 @@ void Client::on_powerButton_clicked()
         _attribute->setPower(true);
         ui->powerButton->setText(QString::fromLocal8Bit("关机"));
         ui->controlBox->setEnabled(true);
+        ui->midButton->setChecked(true);//默认中风速
+        ui->roomTmpLcd->display(QString::number((int)_attribute->getRoomTmp()));
 
         //与主机建立连接
         _socket->connectToHost(_hostIP, _hostPort.toInt());
+        //发送第一条消息
+        sendMessage();
+        calculate(_attribute->getRoomTmp(), _attribute->getDefRoomTmp());
     }
     
     //关机
@@ -113,7 +123,6 @@ void Client::on_powerButton_clicked()
         ui->controlBox->setDisabled(true);
         
         //向主机发送关机消息
-        _attribute->setPower(false);
         sendMessage();
     }
 }
@@ -125,7 +134,7 @@ void Client::sendMessage()
     QJsonDocument document;
     document.setObject(_attribute->toJson());
     QByteArray byteArray = document.toJson(QJsonDocument::Compact);
-
+   // qDebug() << byteArray;
     _socket->write(byteArray);
 }
 
@@ -136,7 +145,8 @@ void Client::readMessage()
     //将消息转化成属性
     _attribute->setFromJson(byteArray);
     //更新UI
-    ui->roomTmpLcd->display(QString::number(_attribute->getRoomTmp()));//室温
+    ui->roomTmpLcd->display(QString::number((int)_attribute->getRoomTmp()));//室温
+    ui->targetTmpLcd->display(QString::number((int)_attribute->getTargetTmp()));//室温
     ui->modeLabel->setText(QString::fromLocal8Bit("模式：")+_attribute->getMode());//模式
     if(_attribute->getIsServed())//被服务
     {
@@ -147,26 +157,59 @@ void Client::readMessage()
     {
         ui->statusLabel->setText(QString::fromLocal8Bit("状态：挂起"));
         //启动温度变化功能
-        calculate(_attribute->getRoomTmp(), _attribute->getTargetTmp());
+        calculate(_attribute->getRoomTmp(), _attribute->getDefRoomTmp());
     }
-    ui->KwhLabel->setText(QString::number(_attribute->getKwh()));//所消耗能量
-    ui->feeLabel->setText(QString::number(_attribute->getFee()));//金额
+    ui->KwhLabel->setText(QString::fromLocal8Bit("消耗能量:") + QString::number(_attribute->getKwh()));//所消耗能量
+    ui->feeLabel->setText(QString::fromLocal8Bit("金额:") + QString::number(_attribute->getFee()));//金额
 }
 
 void Client::autoTmpChange()
 {
-    if(_updown == 1)//室温升一度，发出温控请求
+    //当室温和缺省室温一致以后，温度不再变化
+    //qDebug() << _attribute->getRoomTmp() << " " << _attribute->getDefRoomTmp();
+    if(QString::number(_attribute->getRoomTmp()) == QString::number(_attribute->getDefRoomTmp()))
     {
-        _attribute->incRoomTmp();
-        sendMessage();
-    }
-    else if(_updown == -1)//室温降一度，发出温控请求
-    {
-        _attribute->decRoomTmp();
-        sendMessage();
-    }
-    else//室温保持不变
         _tmpTimer->stop();
+        _updown = 0;
+    }
+
+    else if(_updown == 1)//室温升一单位温度
+    {
+        _attribute->incDeltaRoomTmp();
+        ui->roomTmpLcd->display(QString::number((int)_attribute->getRoomTmp()));
+        sendMessage();
+    }
+    else if(_updown == -1)//室温降一单位温度
+    {
+        _attribute->decDeltaRoomTmp();
+        ui->roomTmpLcd->display(QString::number((int)_attribute->getRoomTmp()));
+        sendMessage();
+    }
+}
+
+void Client::displayError(QAbstractSocket::SocketError socketError)
+{
+     switch (socketError)
+     {
+     case QAbstractSocket::RemoteHostClosedError:
+         break;
+     case QAbstractSocket::HostNotFoundError:
+         QMessageBox::information(this, tr("Client"),
+                                  tr("The host was not found. Please check the "
+                                     "host name and port settings."));
+         break;
+     case QAbstractSocket::ConnectionRefusedError:
+         QMessageBox::information(this, tr("Client"),
+                                  tr("The connection was refused by the peer. "
+                                     "Make sure the server is running, "
+                                     "and check that the host name and port "
+                                     "settings are correct."));
+         break;
+     default:
+         QMessageBox::information(this, tr("Client"),
+                                  tr("The following error occurred: %1.")
+                                  .arg(_socket->errorString()));
+     }
 }
 
 void Client::calculate(float roomTmp, float defRoomTmp)
@@ -177,6 +220,7 @@ void Client::calculate(float roomTmp, float defRoomTmp)
         _updown = 1;
     else                            //室温等于缺省室温，温度不再变化
         _updown = 0;
-    _tmpTimer->setInterval(1000);
+
+    _tmpTimer->setInterval(INTERVAL);
     _tmpTimer->start();
 }

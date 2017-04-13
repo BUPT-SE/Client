@@ -6,18 +6,22 @@ ConfigDialog::ConfigDialog(QWidget* parent) : QDialog(parent)
     QLabel* roomNumLabel = new QLabel(QString::fromLocal8Bit("请输入房间号:"));
     QLabel* IPLabel = new QLabel(QString::fromLocal8Bit("请输入主机IP:"));
     QLabel* portLabel = new QLabel(QString::fromLocal8Bit("请输入主机端口:"));
+    QLabel* defRoomTmpLabel = new QLabel(QString::fromLocal8Bit("请输入缺省室温:"));
     roomNumEdit = new QLineEdit;
     IPEdit = new QLineEdit;
     portEdit = new QLineEdit;
+    defRoomTmpEdit = new QLineEdit;
 
     //网格布局
     QGridLayout* gridLayout = new QGridLayout;
     gridLayout->addWidget(roomNumLabel, 0, 0, 1, 1);
     gridLayout->addWidget(IPLabel, 1, 0, 1, 1);
     gridLayout->addWidget(portLabel, 2, 0, 1, 1);
+    gridLayout->addWidget(defRoomTmpLabel, 3, 0, 1, 1);
     gridLayout->addWidget(roomNumEdit, 0, 1, 1, 1);
     gridLayout->addWidget(IPEdit, 1, 1, 1, 1);
     gridLayout->addWidget(portEdit, 2, 1, 1, 1);
+    gridLayout->addWidget(defRoomTmpEdit, 3, 1, 1, 1);
 
     //确定按键
     QPushButton* okButton = new QPushButton(QString::fromLocal8Bit("确定"));
@@ -44,9 +48,9 @@ ConfigDialog::~ConfigDialog()
 
 }
 
-QString ConfigDialog::getRoomNum()
+int ConfigDialog::getRoomNum()
 {
-    return this->roomNumEdit->text();
+    return this->roomNumEdit->text().toInt();
 }
 
 QString ConfigDialog::getIP()
@@ -59,12 +63,18 @@ QString ConfigDialog::getPort()
     return this->portEdit->text();
 }
 
+double ConfigDialog::getDefRoomTmp()
+{
+    return this->defRoomTmpEdit->text().toDouble();
+}
+
 void ConfigDialog::accept()
 {
-    //房间号，主机IP，主机端口号内容都不为空时，才返回accept
+    //房间号，主机IP，主机端口号，缺省室温内容都不为空时，才返回accept
     if (roomNumEdit->text() != nullptr
         && IPEdit->text() != nullptr
-        && portEdit->text() != nullptr)
+        && portEdit->text() != nullptr
+        && defRoomTmpEdit->text() != nullptr)
     {
         QDialog::accept();
     }
