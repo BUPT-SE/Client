@@ -145,8 +145,12 @@ void Client::readMessage()
     //将消息转化成属性
     _attribute->setFromJson(byteArray);
     //更新UI
-    ui->roomTmpLcd->display(QString::number((int)_attribute->getRoomTmp()));//室温
-    ui->targetTmpLcd->display(QString::number((int)_attribute->getTargetTmp()));//室温
+    //室温
+    if(_attribute->getMode() == Attribute::MODE_COOL)
+        ui->roomTmpLcd->display(QString::number((int)(_attribute->getRoomTmp() + 1)));
+    else
+        ui->roomTmpLcd->display(QString::number((int)_attribute->getRoomTmp()));
+    ui->targetTmpLcd->display(QString::number((int)_attribute->getTargetTmp()));//目标温度
     ui->modeLabel->setText(QString::fromLocal8Bit("模式：")+_attribute->getMode());//模式
     if(_attribute->getIsServed())//被服务
     {
