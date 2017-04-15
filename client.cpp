@@ -24,6 +24,8 @@ Client::Client(QWidget *parent) : QWidget(parent), ui(new Ui::Client)
         typedef void (QAbstractSocket::*QAbstractSocketErrorSignal)(QAbstractSocket::SocketError);
         connect(_socket, static_cast<QAbstractSocketErrorSignal>(&QAbstractSocket::error),
                       this, &Client::displayError);
+        connect(_socket, SIGNAL(connected()), this, SLOT(powerOn()));
+        connect(_socket, SIGNAL(disconnected()), this, SLOT(shutDown()));
         connect(_tmpTimer, SIGNAL(timeout()), this, SLOT(autoTmpChange()));
 
         //主面板先不可用
@@ -100,41 +102,27 @@ void Client::on_powerButton_clicked()
     //开机
     if(ui->powerButton->text() == QString::fromLocal8Bit("开机"))
     {
-        //按钮设置为"关机"，面板可用
-        _attribute->setPower(true);
-        ui->powerButton->setText(QString::fromLocal8Bit("关机"));
-        ui->controlBox->setEnabled(true);
-        ui->midButton->setChecked(true);//默认中风速
-        ui->roomTmpLcd->display(QString::number((int)_attribute->getRoomTmp()));
-
         //与主机建立连接
         _socket->connectToHost(_hostIP, _hostPort.toInt());
-        //发送第一条消息
-        sendMessage();
-        calculate(_attribute->getRoomTmp(), _attribute->getDefRoomTmp());
     }
     
     //关机
     else if(ui->powerButton->text() == QString::fromLocal8Bit("关机"))
-    {
-        //按钮设置为"开机"，面板不可用
-        _attribute->setPower(false);
-        ui->powerButton->setText(QString::fromLocal8Bit("开机"));
-        ui->controlBox->setDisabled(true);
-        
+    {   
         //向主机发送关机消息
+        _attribute->setPower(false);
         sendMessage();
     }
 }
 
 void Client::sendMessage()
 {
-    qDebug() << "send message!" << endl;
+    qDebug() << "send message to server!" << endl;
     //发送json格式的消息
     QJsonDocument document;
     document.setObject(_attribute->toJson());
     QByteArray byteArray = document.toJson(QJsonDocument::Compact);
-   // qDebug() << byteArray;
+    qDebug() << byteArray;
     _socket->write(byteArray);
 }
 
@@ -144,15 +132,18 @@ void Client::readMessage()
     QByteArray byteArray = _socket->readAll();
     //将消息转化成属性
     _attribute->setFromJson(byteArray);
+    qDebug() << "recieve message from server!" << endl;
+    qDebug() << byteArray;
     //更新UI
     //室温
     if(_attribute->getMode() == Attribute::MODE_COOL)
-        ui->roomTmpLcd->display(QString::number((int)(_attribute->getRoomTmp() + 1)));
+        ui->roomTmpLcd->display(QString::number(qCeil(_attribute->getRoomTmp())));
     else
-        ui->roomTmpLcd->display(QString::number((int)_attribute->getRoomTmp()));
-    ui->targetTmpLcd->display(QString::number((int)_attribute->getTargetTmp()));//目标温度
+        ui->roomTmpLcd->display(QString::number(qFloor(_attribute->getRoomTmp())));
+    ui->targetTmpLcd->display(QString::number((int)_attribute->getTargetTmp()));
     ui->modeLabel->setText(QString::fromLocal8Bit("模式：")+_attribute->getMode());//模式
-    if(_attribute->getIsServed())//被服务
+    //被服务
+    if(_attribute->getIsServed())
     {
         ui->statusLabel->setText(QString::fromLocal8Bit("状态：服务"));
         _tmpTimer->stop();
@@ -214,6 +205,28 @@ void Client::displayError(QAbstractSocket::SocketError socketError)
                                   tr("The following error occurred: %1.")
                                   .arg(_socket->errorString()));
      }
+}
+
+void Client::powerOn()
+{
+    //按钮设置为"关机"，面板可用
+    _attribute->setPower(true);
+    ui->powerButton->setText(QString::fromLocal8Bit("关机"));
+    ui->controlBox->setEnabled(true);
+    ui->midButton->setChecked(true);//默认中风速
+    ui->roomTmpLcd->display(QString::number((int)_attribute->getRoomTmp()));
+
+    //发送第一条消息
+    sendMessage();
+    calculate(_attribute->getRoomTmp(), _attribute->getDefRoomTmp());
+}
+
+void Client::shutDown()
+{
+    //按钮设置为"开机"，面板不可用
+    ui->powerButton->setText(QString::fromLocal8Bit("开机"));
+    ui->controlBox->setDisabled(true);
+    calculate(_attribute->getRoomTmp(), _attribute->getDefRoomTmp());
 }
 
 void Client::calculate(float roomTmp, float defRoomTmp)
