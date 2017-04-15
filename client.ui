@@ -72,7 +72,7 @@
      <rect>
       <x>10</x>
       <y>70</y>
-      <width>101</width>
+      <width>121</width>
       <height>31</height>
      </rect>
     </property>
@@ -85,7 +85,7 @@
      </font>
     </property>
     <property name="text">
-     <string>当前室温：</string>
+     <string>当前室温℃：</string>
     </property>
    </widget>
    <widget class="QLCDNumber" name="roomTmpLcd">
@@ -103,7 +103,7 @@
      <rect>
       <x>10</x>
       <y>120</y>
-      <width>91</width>
+      <width>111</width>
       <height>31</height>
      </rect>
     </property>
@@ -114,7 +114,7 @@
      </font>
     </property>
     <property name="text">
-     <string>目标温度：</string>
+     <string>目标温度℃：</string>
     </property>
    </widget>
    <widget class="QPushButton" name="upButton">
@@ -167,7 +167,7 @@
      </font>
     </property>
     <property name="text">
-     <string>消耗能量：</string>
+     <string>消耗能量(Kwh):</string>
     </property>
    </widget>
    <widget class="QLabel" name="feeLabel">
@@ -188,7 +188,7 @@
      </font>
     </property>
     <property name="text">
-     <string>金额：</string>
+     <string>金额(元):</string>
     </property>
    </widget>
    <widget class="QLCDNumber" name="targetTmpLcd">

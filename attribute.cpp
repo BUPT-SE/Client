@@ -54,56 +54,48 @@ void Attribute::setFromJson(QByteArray byteArray)
             {
                 QJsonValue roomTmp = json.take("roomTmp");
                 _roomTmp = roomTmp.toDouble();
-               // qDebug() << _roomTmp;
             }
             //得到mode
             if(json.contains("mode"))
             {
                 QJsonValue mode = json.take("mode");
                 _mode = mode.toInt();
-              //  qDebug() << _mode;
             }
-            //得到roomTmp
+            //得到targetTmp
             if(json.contains("targetTmp"))
             {
                 QJsonValue targetTmp = json.take("targetTmp");
                 _targetTmp = targetTmp.toDouble();
-               // qDebug() << _targetTmp;
             }
             //得到isServed
             if(json.contains("isServed"))
             {
                 QJsonValue isServed = json.take("isServed");
                 _isServed = isServed.toBool();
-                qDebug() << "isServed" << _isServed;
             }
             //得到Kwh
             if(json.contains("Kwh"))
             {
                 QJsonValue Kwh = json.take("Kwh");
                 _Kwh = Kwh.toDouble();
-              //  qDebug() << _Kwh;
             }
             //得到fee
             if(json.contains("fee"))
             {
                 QJsonValue fee = json.take("fee");
                 _fee = fee.toDouble();
-               // qDebug() << _fee;
             }
             //得到lowestTmp
             if(json.contains("lowestTmp"))
             {
                 QJsonValue lowestTmp = json.take("lowestTmp");
                 _lowestTmp = lowestTmp.toDouble();
-              //  qDebug() << _lowestTmp;
             }
             //得到highestTmp
             if(json.contains("highestTmp"))
             {
                 QJsonValue highestTmp = json.take("highestTmp");
                 _highestTmp = highestTmp.toDouble();
-              //  qDebug() << _highestTmp;
             }
         }
     }

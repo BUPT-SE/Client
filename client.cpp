@@ -32,12 +32,14 @@ Client::Client(QWidget *parent) : QWidget(parent), ui(new Ui::Client)
         ui->controlBox->setDisabled(true);
 
         _attribute->setRoomNum(c.getRoomNum());         //配置房间号
+        _attribute->setWindSpeed(Attribute::SPD_MID);   //配置默认风速
         _hostIP = c.getIP();                            //配置主机IP地址
         _hostPort = c.getPort();                        //配置主机端口
         _attribute->setDefRoomTmp(c.getDefRoomTmp());   //配置缺省室温
         _attribute->setRoomTmp(c.getDefRoomTmp());      //配置室温等于缺省室温
         ui->roomNumLabel->setText(QString::fromLocal8Bit("房间号:") + QString::number(c.getRoomNum()));
         ui->roomTmpLcd->display(QString::number((int)c.getDefRoomTmp()));
+        ui->midButton->setChecked(true);
     }
 }
 
@@ -117,11 +119,11 @@ void Client::on_powerButton_clicked()
 
 void Client::sendMessage()
 {
-    qDebug() << "send message to server!" << endl;
     //发送json格式的消息
     QJsonDocument document;
     document.setObject(_attribute->toJson());
     QByteArray byteArray = document.toJson(QJsonDocument::Compact);
+    qDebug() << "send message to server!" << endl;
     qDebug() << byteArray;
     _socket->write(byteArray);
 }
@@ -154,8 +156,8 @@ void Client::readMessage()
         //启动温度变化功能
         calculate(_attribute->getRoomTmp(), _attribute->getDefRoomTmp());
     }
-    ui->KwhLabel->setText(QString::fromLocal8Bit("消耗能量:") + QString::number(_attribute->getKwh()));//所消耗能量
-    ui->feeLabel->setText(QString::fromLocal8Bit("金额:") + QString::number(_attribute->getFee()));//金额
+    ui->KwhLabel->setText(QString::fromLocal8Bit("消耗能量(Kwh):") + QString::number(_attribute->getKwh()));//所消耗能量
+    ui->feeLabel->setText(QString::fromLocal8Bit("金额(元):") + QString::number(_attribute->getFee()));//金额
 }
 
 void Client::autoTmpChange()
@@ -226,6 +228,7 @@ void Client::shutDown()
     //按钮设置为"开机"，面板不可用
     ui->powerButton->setText(QString::fromLocal8Bit("开机"));
     ui->controlBox->setDisabled(true);
+    _attribute->setPower(false);
     calculate(_attribute->getRoomTmp(), _attribute->getDefRoomTmp());
 }
 
