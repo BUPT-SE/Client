@@ -228,6 +228,8 @@ void Client::shutDown()
     //按钮设置为"开机"，面板不可用
     ui->powerButton->setText(QString::fromLocal8Bit("开机"));
     ui->controlBox->setDisabled(true);
+    ui->statusLabel->setText(QString::fromLocal8Bit("状态："));
+    //启动温度变化功能
     _attribute->setPower(false);
     calculate(_attribute->getRoomTmp(), _attribute->getDefRoomTmp());
 }
