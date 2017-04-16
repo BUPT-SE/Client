@@ -114,7 +114,6 @@ void Client::on_powerButton_clicked()
         sendMessage();
         calculate(_attribute->getRoomTmp(), _attribute->getDefRoomTmp());
     }
-    
     //关机
     else if(ui->powerButton->text() == QString::fromLocal8Bit("关机"))
     {   
@@ -181,7 +180,7 @@ void Client::readMessage()
 void Client::autoTmpChange()
 {
     //当室温和缺省室温一致以后，温度不再变化
-    if(QString::number(_attribute->getRoomTmp()) == QString::number(_attribute->getDefRoomTmp()))
+    if((int)(_attribute->getRoomTmp() - _attribute->getDefRoomTmp()) == 0)
     {
         _tmpTimer->stop();
         _updown = 0;
@@ -191,13 +190,15 @@ void Client::autoTmpChange()
     {
         _attribute->incDeltaRoomTmp();
         ui->roomTmpLcd->display(QString::number(qRound(_attribute->getRoomTmp())));
-        sendMessage();
+        if(_attribute->getPower())//关机不发消息
+            sendMessage();
     }
     else if(_updown == -1)//室温降一单位温度
     {
         _attribute->decDeltaRoomTmp();
         ui->roomTmpLcd->display(QString::number(qRound(_attribute->getRoomTmp())));
-        sendMessage();
+        if(_attribute->getPower())//关机不发消息
+            sendMessage();
     }
 }
 
