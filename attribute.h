@@ -43,6 +43,7 @@ public:
     bool getPower() const;
     void setPower(const bool &power);
     bool getIsServed() const;
+    void setIsServed(const bool &isServed);
     double getKwh() const;
     double getFee() const;
     void setDefRoomTmp(const double &defRoomTmp);

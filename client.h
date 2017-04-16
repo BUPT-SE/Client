@@ -36,11 +36,7 @@ private slots:
 
     void autoTmpChange();           //房间温度自动变化
 
-    void displayError(QAbstractSocket::SocketError socketError);//显示错误
-
-    void shutDown();                //开机
-
-    void powerOn();                 //关机
+    void shutDown();                 //关机
 
 private:
     Ui::Client *ui;                 //ui

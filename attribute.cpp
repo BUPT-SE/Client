@@ -4,16 +4,16 @@ Attribute::Attribute()
 {
     _roomNum = -1;
     _windSpeed = SPD_MID;
-    _roomTmp = 0;
-    _targetTmp = 0;
-    _mode = 0;
+    _roomTmp = -1;
+    _targetTmp = -1;
+    _mode = -1;
     _power = false;
     _isServed = false;
-    _defRoomTmp = 0;
-    _Kwh = 0;
-    _fee = 0;
-    _lowestTmp = 0;
-    _highestTmp = 0;
+    _defRoomTmp = -1;
+    _Kwh = -1;
+    _fee = -1;
+    _lowestTmp = -1;
+    _highestTmp = -1;
 }
 
 Attribute::~Attribute()
@@ -43,12 +43,6 @@ void Attribute::setFromJson(QByteArray byteArray)
         if(doucment.isObject())
         {
             QJsonObject json = doucment.object();
-            /*
-            for(QString str:json.keys())
-            {
-                qDebug() << str << endl;
-            }
-            */
             //得到roomTmp
             if(json.contains("roomTmp"))
             {
@@ -60,12 +54,6 @@ void Attribute::setFromJson(QByteArray byteArray)
             {
                 QJsonValue mode = json.take("mode");
                 _mode = mode.toInt();
-            }
-            //得到targetTmp
-            if(json.contains("targetTmp"))
-            {
-                QJsonValue targetTmp = json.take("targetTmp");
-                _targetTmp = targetTmp.toDouble();
             }
             //得到isServed
             if(json.contains("isServed"))
@@ -85,18 +73,27 @@ void Attribute::setFromJson(QByteArray byteArray)
                 QJsonValue fee = json.take("fee");
                 _fee = fee.toDouble();
             }
+            //得到targetTmp
+            if(json.contains("targetTmp"))
+                if(_targetTmp == -1)//如果是第一次主机给从机配置
+                {
+                    QJsonValue targetTmp = json.take("targetTmp");
+                    _targetTmp = targetTmp.toDouble();
+                }
             //得到lowestTmp
             if(json.contains("lowestTmp"))
-            {
-                QJsonValue lowestTmp = json.take("lowestTmp");
-                _lowestTmp = lowestTmp.toDouble();
-            }
+                if(_lowestTmp == -1)//如果是第一次主机给从机配置
+                {
+                    QJsonValue lowestTmp = json.take("lowestTmp");
+                    _lowestTmp = lowestTmp.toDouble();
+                }
             //得到highestTmp
             if(json.contains("highestTmp"))
-            {
-                QJsonValue highestTmp = json.take("highestTmp");
-                _highestTmp = highestTmp.toDouble();
-            }
+                if(_highestTmp == -1)//如果是第一次主机给从机配置
+                {
+                    QJsonValue highestTmp = json.take("highestTmp");
+                    _highestTmp = highestTmp.toDouble();
+                }
         }
     }
     else
@@ -202,6 +199,11 @@ void Attribute::setPower(const bool &power)
 bool Attribute::getIsServed() const
 {
     return _isServed;
+}
+
+void Attribute::setIsServed(const bool &isServed)
+{
+    _isServed = isServed;
 }
 
 double Attribute::getKwh() const
