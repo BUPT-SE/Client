@@ -6,7 +6,8 @@
 #include <QTcpSocket>
 #include "attribute.h"
 
-#define INTERVAL 2000
+//室温自动变化时，每分钟变化0.5度，即每12秒变化0.1度
+#define INTERVAL 12000
 
 namespace Ui {
 class Client;
@@ -49,7 +50,7 @@ private:
 
 private:
     void calculate(float roomTmp, float defRoomTmp);//根据室温和缺省室温计算_tmpCount和_updown
-    void sendMessage();             //发送消息
+    void sendMessage();             //发送消息z
 
 };
 

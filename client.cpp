@@ -126,6 +126,7 @@ void Client::on_powerButton_clicked()
         ui->statusLabel->setText(QString::fromLocal8Bit("状态："));
         //启动温度变化功能
         _attribute->setIsServed(false);
+        _attribute->setTargetTmp(-1);
         calculate(_attribute->getRoomTmp(), _attribute->getDefRoomTmp());
     }
 }
@@ -200,12 +201,14 @@ void Client::autoTmpChange()
         if(_attribute->getPower())//关机不发消息
             sendMessage();
     }
+    ui->roomTmpLcd->display(QString::number(qRound(_attribute->getRoomTmp())));
 }
 
 void Client::shutDown()
 {
     _attribute->setPower(false);
     _attribute->setIsServed(false);
+    _attribute->setTargetTmp(-1);
     //按钮设置为"开机"，面板不可用
     ui->powerButton->setText(QString::fromLocal8Bit("开机"));
     ui->controlBox->setDisabled(true);

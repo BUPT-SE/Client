@@ -10,8 +10,8 @@ Attribute::Attribute()
     _power = false;
     _isServed = false;
     _defRoomTmp = -1;
-    _Kwh = -1;
-    _fee = -1;
+    _Kwh = 0;
+    _fee = 0;
     _lowestTmp = -1;
     _highestTmp = -1;
 }
@@ -29,6 +29,8 @@ QJsonObject Attribute::toJson()
     json.insert("roomTmp", _roomTmp);
     json.insert("targetTmp", _targetTmp);
     json.insert("power", _power);
+    json.insert("fee", _fee);
+    json.insert("Kwh", _Kwh);
 
     return json;
 }
