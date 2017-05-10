@@ -29,8 +29,6 @@ QJsonObject Attribute::toJson()
     json.insert("roomTmp", _roomTmp);
     json.insert("targetTmp", _targetTmp);
     json.insert("power", _power);
-    json.insert("fee", _fee);
-    json.insert("Kwh", _Kwh);
 
     return json;
 }
