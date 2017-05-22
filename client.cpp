@@ -28,10 +28,10 @@ Client::Client(QWidget *parent) : QWidget(parent), ui(new Ui::Client)
         ui->controlBox->setDisabled(true);
         _attribute->setRoomNum(c.getRoomNum());         //配置房间号
         _attribute->setWindSpeed(Attribute::SPD_MID);   //配置默认风速
-        _hostIP = c.getIP();                            //配置主机IP地址
-        _hostPort = c.getPort();                        //配置主机端口
         _attribute->setDefRoomTmp(c.getDefRoomTmp());   //配置缺省室温
         _attribute->setRoomTmp(c.getDefRoomTmp());      //配置室温等于缺省室温
+        _hostPort = c.getPort();                        //配置主机端口
+        _hostIP = c.getIP();                            //配置主机IP地址
         ui->roomNumLabel->setText(QString::fromLocal8Bit("房间号:") + QString::number(c.getRoomNum()));
         ui->roomTmpLcd->display(QString::number((int)c.getDefRoomTmp()));
         ui->midButton->setChecked(true);
@@ -40,6 +40,7 @@ Client::Client(QWidget *parent) : QWidget(parent), ui(new Ui::Client)
 
 Client::~Client()
 {
+    _socket->disconnectFromHost();
     delete ui;
 }
 
@@ -120,6 +121,7 @@ void Client::on_powerButton_clicked()
         //向主机发送关机消息
         _attribute->setPower(false);
         sendMessage();
+        _socket->disconnectFromHost();
         //按钮设置为"开机"，面板不可用
         ui->powerButton->setText(QString::fromLocal8Bit("开机"));
         ui->controlBox->setDisabled(true);
@@ -137,8 +139,8 @@ void Client::sendMessage()
     QJsonDocument document;
     document.setObject(_attribute->toJson());
     QByteArray byteArray = document.toJson(QJsonDocument::Compact);
-    qDebug() << "send message to server!" << endl;
-    qDebug() << byteArray;
+    qDebug() << "send message to server!";
+    qDebug() << byteArray << endl;
     _socket->write(byteArray);
 }
 
@@ -149,8 +151,8 @@ void Client::readMessage()
     //将消息转化成属性
     _attribute->setFromJson(byteArray);
 
-    qDebug() << "recieve message from server!" << endl;
-    qDebug() << byteArray;
+    qDebug() << "recieve message from server!";
+    qDebug() << byteArray << endl;
     //更新UI
     //室温和目标温度
     ui->roomTmpLcd->display(QString::number(qRound(_attribute->getRoomTmp())));
@@ -180,8 +182,10 @@ void Client::readMessage()
 
 void Client::autoTmpChange()
 {
+    qDebug() << "autoTmpChange!";
+    qDebug() << "updown:" << _updown;
     //当室温和缺省室温一致以后，温度不再变化
-    if((int)(_attribute->getRoomTmp() - _attribute->getDefRoomTmp()) == 0)
+    if(qAbs(_attribute->getRoomTmp() - _attribute->getDefRoomTmp()) <= 0.1)
     {
         _tmpTimer->stop();
         _updown = 0;
@@ -208,7 +212,6 @@ void Client::shutDown()
 {
     _attribute->setPower(false);
     _attribute->setIsServed(false);
-    _attribute->setTargetTmp(-1);
     //按钮设置为"开机"，面板不可用
     ui->powerButton->setText(QString::fromLocal8Bit("开机"));
     ui->controlBox->setDisabled(true);
